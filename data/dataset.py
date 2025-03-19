@@ -1,7 +1,7 @@
 import os 
 from PIL import Image
 from torch.utils.data import Dataset, DataLoader
-from preprocessing import train_transforms,val_test_transforms
+from data.preprocessing import train_transforms,val_test_transforms
 
 
 class ChestXRayDataset(Dataset):

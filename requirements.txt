@@ -7,3 +7,5 @@ scikit-learn>=1.0.1
 pillow>=8.3.2
 grad-cam>=1.3.7
 kaggle
+tqdm
+seaborn
