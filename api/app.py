@@ -1,10 +1,14 @@
 from flask import Flask, request, jsonify
 import torch
+
+import sys,os,io
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from model.architecture import PneumoniaClassifier
 from utils.config import DEVICE, NUM_CLASSES
+from utils.logging import logger
 from data.preprocessing import val_test_transforms
 from PIL import Image
-import io
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -28,12 +32,15 @@ def predict_image(image_file):
         confidence = probs[0][predicted].item()
         label = "Pneumonia" if predicted.item() == 1 else "Normal"
     
+    logger.info(f"Predicted: {label}, Confidence: {confidence}")
+    
     return label, confidence
 
 # Define API endpoint
 @app.route('/predict', methods=['POST'])
 def predict():
     if 'image' not in request.files:
+        logger.error("No image provided in request")
         return jsonify({'error': 'No image provided'}), 400
     
     image_file = request.files['image']
@@ -44,6 +51,7 @@ def predict():
             'confidence': confidence
         })
     except Exception as e:
+        logger.error(f"Prediction error: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
