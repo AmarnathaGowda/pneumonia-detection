@@ -4,6 +4,8 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import confusion_matrix
+from torchvision import transforms
+from PIL import Image
 
 import sys,os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -11,6 +13,10 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from model.architecture import PneumoniaClassifier
 from utils.config import DEVICE,NUM_CLASSES,BATCH_SIZE,DATA_PATH
 from data.dataset import get_data_loaders
+
+from utils.gradcam import generate_gradcam
+from data.preprocessing import val_test_transforms
+
 
 
 # Load the model
@@ -56,6 +62,8 @@ plt.xlabel('Predicted')
 plt.ylabel('Actual')
 plt.title('Confusion Matrix')
 plt.show()
+# Save confusion matrix plot
+plt.savefig('confusion_matrix.png')
 
 # Save the Results
 # Save metrics to a text file
@@ -65,5 +73,19 @@ with open('evaluation_results.txt', 'w') as f:
     f.write(f"Test Recall: {recall:.4f}\n")
     f.write(f"Test F1-Score: {f1:.4f}\n")
 
-# Save confusion matrix plot
-plt.savefig('confusion_matrix.png')
+
+
+# Load a sample image
+# sample_image_path = 'data/raw/chest_xray/test/PNEUMONIA/person1_bacteria_1.jpeg'
+sample_image_path = '/Users/amarnathgowda/Desktop/pojects/pneumonia-detection/data/raw/chest_xray/test/PNEUMONIA/person1_virus_6.jpeg'
+image = Image.open(sample_image_path).convert('RGB')
+image_tensor = val_test_transforms(image)
+
+# Generate Grad-CAM for class 1 (Pneumonia)
+cam_image = generate_gradcam(model, image_tensor, target_class=1, device=DEVICE)
+
+# Display the result
+plt.imshow(cam_image)
+plt.title('Grad-CAM Heatmap')
+plt.show()
+plt.savefig('gradcam_sample.png')

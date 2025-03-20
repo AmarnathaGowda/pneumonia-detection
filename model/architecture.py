@@ -10,10 +10,26 @@ class PneumoniaClassifier(nn.Module):
         super(PneumoniaClassifier, self).__init__()
         # Load pre-trained ResNet18 with updated weights parameter
         self.model = resnet18(weights=ResNet18_Weights.DEFAULT)
+        self.model.fc = nn.Linear(self.model.fc.in_features, num_classes)
         
         # Modify the final fully connected layer for binary classification
         num_ftrs = self.model.fc.in_features
         self.model.fc = nn.Linear(num_ftrs, num_classes)
+
+        # Register hooks to capture gradients and activations
+        self.gradients = None
+        self.activations = None
+        self.model.layer4[-1].register_forward_hook(self.save_activations)
+        self.model.layer4[-1].register_backward_hook(self.save_gradients)
+
+    def forward(self, x):
+        return self.model(x)
+    
+    def save_activations(self, module, input, output):
+        self.activations = output
+
+    def save_gradients(self, module, grad_input, grad_output):
+        self.gradients = grad_output[0]
 
     def forward(self, x):
         return self.model(x)
